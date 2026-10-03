@@ -1,32 +1,54 @@
 # AIGC Local Image Pipeline
 
-![Tests](https://github.com/Alexander390370/aigc-local-image-pipeline/actions/workflows/test.yml/badge.svg)
+A fully local AIGC image generation system built on top of Stable Diffusion WebUI Forge. Provides batch generation from prompt lists, a reusable API client, and Windows one-click launchers.
+
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Platform: WSL2](https://img.shields.io/badge/Platform-WSL2-blue)
 ![Python 3.10](https://img.shields.io/badge/Python-3.10-blue)
 
-> **Status**: Working pipeline, tested on RTX 4060 Laptop 8GB under WSL2. This repository implements application-layer scripts on top of Stable Diffusion WebUI Forge. For base environment installation steps, refer to [sd-forge-8gb-vram-setup](https://github.com/Alexander390370/sd-forge-8gb-vram-setup). **Not polished production-grade code — expect manual adjustments for heavy-duty workloads.**
+> **Status**: Working system, tested on RTX 4060 Laptop 8GB under WSL2. This repository ships the **system layer** — the scripts and workflow that turn a running Forge instance into an automated generation pipeline. For base environment installation, see [sd-forge-8gb-vram-setup](https://github.com/Alexander390370/sd-forge-8gb-vram-setup). **Not production-grade — single-card edge pipeline, expect manual tuning for heavy workloads.**
 
 ## Table of Contents
 
+- [What This Repo Is (and Isn't)](#what-this-repo-is-and-isnt)
 - [Overview](#overview)
+- [Example Output](#example-output)
 - [Architecture](#architecture)
 - [Repository Structure](#repository-structure)
 - [Quick Start](#quick-start)
+- [Windows One-Click Launchers](#windows-one-click-launchers-optional)
 - [Scripts](#scripts)
-- [Agent Integration](#agent-integration)
+- [Prompt List Format](#prompt-list-format)
 - [Model Selection](#model-selection)
 - [Known Limitations](#known-limitations)
 - [Related Work](#related-work)
 
+## What This Repo Is (and Isn't)
+
+- ✅ **Is**: a working automation layer — batch generation, prompt-list driven runs, HTTP API client, double-click Windows launchers.
+- ❌ **Isn't**: a Forge installation guide. If you haven't set up Forge yet, start with [sd-forge-8gb-vram-setup](https://github.com/Alexander390370/sd-forge-8gb-vram-setup) first, then come back here.
+
+The two repos are complementary: one documents how to get Forge running on constrained hardware, the other documents how to *use* it as a system.
+
 ## Overview
 
-Most Stable Diffusion setups stop at "it generates images". This repo takes the next step: turning a local Forge instance into an **automatable system** for two real workflows:
+Most Stable Diffusion setups stop at "I can generate one image by clicking a button". This repo takes the next step: turning a running local Forge instance into an **automatable system** that can:
 
-1. **Batch generation** — read a prompt list, produce N images unattended, save with deterministic filenames.
-2. **Agent integration** — expose Forge's API through a minimal Python client, so other tools (Agents, schedulers, your own code) can call it programmatically.
+1. **Batch generate** — read a prompt list, produce N images unattended, save with deterministic filenames.
+2. **Serve other software** — expose Forge's API through a minimal Python client, so other tools (Agents, schedulers, your own code) can call it programmatically.
 
 Everything runs offline after setup. No cloud API, no per-image cost.
+
+## Example Output
+
+All four images were generated with the same pipeline (`scripts/batch_gen.py`) on RTX 4060 Laptop 8GB. Default parameters: 512×768, 20 steps, DPM++ 2M Karras.
+
+| | |
+|---|---|
+| ![portrait-1](./docs/portrait-1.png)<br>**Realistic Vision V5.1** | ![portrait-2](./docs/portrait-2.png)<br>**UnrealVision XL Cinematic** |
+| ![portrait-3](./docs/portrait-3.png)<br>**Realistic Vision V5.1** | ![portrait-4](./docs/portrait-4.png)<br>**Realistic Vision V5.1** |
+
+*Note: portrait-2 was generated with a different checkpoint (`unrealvisionXLPhotoreal_cinematicEdition`) to demonstrate that the pipeline is model-agnostic — switch the model in Forge's UI, and the same script works without modification.*
 
 ## Architecture
 
@@ -58,14 +80,17 @@ aigc-local-image-pipeline/
 ├── .gitignore
 ├── requirements.txt
 ├── run_pipeline.sh           # One-shot: waits for Forge, then runs batch_gen
+├── docs/                     # Example output images
+│   ├── portrait-1.png
+│   ├── portrait-2.png
+│   ├── portrait-3.png
+│   └── portrait-4.png
 ├── scripts/
 │   ├── batch_gen.py          # Batch generation from a prompt list
 │   ├── api_client.py         # Reusable Python client for Forge API
 │   └── model_downloader.sh   # Download community models from hf-mirror
 ├── prompts/
 │   └── examples.txt          # Example prompt list (one per line)
-├── tests/
-│   └── test_batch_gen.py     # Unit tests (run via pytest)
 └── config/
     └── config.example.yaml   # Base URL, default params
 ```
@@ -77,8 +102,6 @@ aigc-local-image-pipeline/
 ```bash
 cd ~/stable-diffusion-webui-forge
 conda activate sd-forge
-# --disable-safe-unpickle: disables safety check for local trusted models.
-# Do not use on public networks; only load model files from sources you trust.
 python launch.py --api --listen --medvram --disable-safe-unpickle --port 7860
 ```
 
@@ -92,6 +115,14 @@ Confirm the API is up:
 curl http://127.0.0.1:7860/sdapi/v1/sd-models
 ```
 Should return a JSON list of models. If empty or 502, Forge is not fully started yet.
+
+> ⚠️ **Security Note on `--disable-safe-unpickle`**
+>
+> This flag skips model file safety validation. Model files are Python pickles; a malicious one can execute arbitrary code on load.
+>
+> - Only use on a private local network.
+> - Never expose this Forge instance to the public internet.
+> - Only load model weights from sources you trust.
 
 ### 2. Install dependencies
 
@@ -114,14 +145,6 @@ python scripts/batch_gen.py \
 On Windows + WSL2, `/mnt/c/Users/<YourName>/Desktop/...` maps directly to the Windows desktop.
 
 > 💡 **WSL filesystem note**: writing to `/mnt/c/...` is convenient but slower than the native WSL filesystem. For high-throughput batches, write to `~/generated/` first and copy files to Windows afterward.
-
-### 4. Run tests
-
-```bash
-pytest
-```
-
-Expected: `2 passed`. The same test suite runs automatically on every push via GitHub Actions.
 
 ## Windows One-Click Launchers (Optional)
 
@@ -195,46 +218,6 @@ a cyberpunk street scene, neon reflections, cinematic
 
 Each line becomes one image. To use your own list, edit this file (or point `--prompts` at any text file).
 
-## Agent Integration
-
-The Forge API can be called as a tool by any Agent that supports custom HTTP tools.
-
-Example: register Forge as a tool in Hermes Agent's `config.yaml`:
-
-```yaml
-tools:
-  - name: generate_image
-    type: http
-    base_url: http://127.0.0.1:7860
-    endpoint: /sdapi/v1/txt2img
-    method: POST
-    params:
-      prompt: "{prompt}"
-      steps: 20
-      width: 512
-      height: 512
-```
-
-If you don't use Hermes, you can call the same endpoint directly from Python:
-
-```python
-import requests, base64
-
-r = requests.post("http://127.0.0.1:7860/sdapi/v1/txt2img", json={
-    "prompt": "a cat on a windowsill",
-    "steps": 20, "width": 512, "height": 512,
-})
-img_b64 = r.json()["images"][0]
-with open("cat.png", "wb") as f:
-    f.write(base64.b64decode(img_b64.split(",", 1)[-1]))
-```
-
-Useful for:
-
-- Auto-generating illustrations for reports
-- Producing mock product images for e-commerce drafts
-- Generating assets for local Agent demos
-
 ## Model Selection
 
 For 8GB VRAM, stick with SD 1.5 models for batch generation:
@@ -251,7 +234,7 @@ SDXL models (6.5–7GB) work for single-image generation but will OOM during bat
 
 - **Batch size is 1.** The Forge API processes one image per request. Higher concurrency will trigger VRAM OOM on 8GB GPUs.
 - **No ControlNet integration yet.** ControlNet would require a Forge extension and additional API parameters.
-- **Prompt input is plain-text only.** CSV input with per-prompt overrides is not implemented; can be extended as required.
+- **Prompt input is plain-text only.** CSV input with per-prompt overrides is not implemented.
 - **Forge API version sensitivity.** The `/sdapi/v1/` endpoints are stable across Forge releases, but extension APIs (ControlNet, ADetailer) may change between versions.
 - **Not production-grade.** Single-card edge pipeline, not a scaled cluster. Expect manual tuning for heavy workloads.
 
@@ -259,11 +242,9 @@ SDXL models (6.5–7GB) work for single-image generation but will OOM during bat
 
 ## Related Work
 
-The same 8GB RTX 4060, running different workloads:
-
-- **[sd-forge-8gb-vram-setup](https://github.com/Alexander390370/sd-forge-8gb-vram-setup)** — setup and installation log for running Forge on 8GB VRAM. **Start here if you don't have Forge running yet.**
-- **[Bonsai-27B-8GB-VRAM-Setup](https://github.com/Alexander390370/Bonsai-27B-8GB-VRAM-Setup)** — the same 8GB card, running an LLM instead of a diffusion model.
-- **[esp32-edge-ai-security](https://github.com/Alexander390370/esp32-edge-ai-security)** — edge-side AI, the hardware counterpart to this software pipeline.
+- **[sd-forge-8gb-vram-setup](https://github.com/Alexander390370/sd-forge-8gb-vram-setup)** — the setup and installation log for running Forge on 8GB VRAM. **Start here if you don't have Forge running yet.**
+- **[Bonsai-27B-8GB-VRAM-Setup](https://github.com/Alexander390370/Bonsai-27B-8GB-VRAM-Setup)** — the same 8GB card, running a quantized 27B LLM.
+- **[esp32-edge-ai-security](https://github.com/Alexander390370/esp32-edge-ai-security)** — edge-side AI on the hardware counterpart to this software stack.
 - **[esp32-pwm-fan-controller](https://github.com/Alexander390370/esp32-pwm-fan-controller)** — low-level firmware project on the same hardware stack.
 
 ## License
