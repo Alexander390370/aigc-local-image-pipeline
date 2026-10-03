@@ -35,7 +35,7 @@ The two repos are complementary: one documents how to get Forge running on const
 
 Most Stable Diffusion setups stop at "I can generate one image by clicking a button". This repo takes the next step: turning a running local Forge instance into an **automatable system** that can:
 
-1. **Batch generate** — read a prompt list, produce N images unattended, save with deterministic filenames.
+1. **Batch generate** — read a prompt list, produce N images unattended, save with timestamped filenames.
 2. **Serve other software** — expose Forge's API through a minimal Python client, so other tools (Agents, schedulers, your own code) can call it programmatically.
 
 Everything runs offline after setup. No cloud API, no per-image cost.
