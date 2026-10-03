@@ -150,13 +150,19 @@ On Windows + WSL2, `/mnt/c/Users/<YourName>/Desktop/...` maps directly to the Wi
 
 > 💡 **WSL filesystem note**: writing to `/mnt/c/...` is convenient but slower than the native WSL filesystem. For high-throughput batches, write to `~/generated/` first and copy files to Windows afterward.
 
+> 💡 **Alternative**: if you use the wrapper script `run_pipeline.sh`, set the `AIGC_OUTPUT` environment variable to override the default output directory (`~/generated`). Example:
+>
+> ```bash
+> AIGC_OUTPUT=/mnt/c/Users/<YourName>/Desktop/aigc-output ./run_pipeline.sh
+> ```
+
 ### 4. Run tests
 
 ```bash
 pytest
 ```
 
-Expected: `2 passed`. The same test suite runs automatically on every push via GitHub Actions.
+Expected: `3 passed`. The same test suite runs automatically on every push via GitHub Actions.
 
 ## Windows One-Click Launchers (Optional)
 
@@ -186,7 +192,7 @@ The `source .../conda.sh &&` prefix is required — `wsl.exe -e bash -c` runs a 
 
 ### `scripts/batch_gen.py`
 
-Reads a prompt list (one per line), calls Forge's `/sdapi/v1/txt2img`, saves images with deterministic filenames.
+Reads a prompt list (one per line), calls Forge's `/sdapi/v1/txt2img`, saves images with timestamped filenames.
 
 | Argument | Default | Notes |
 |----------|---------|-------|
