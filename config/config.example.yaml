@@ -1,0 +1,16 @@
+# Forge API connection
+base_url: "http://127.0.0.1:7860"
+
+defaults:
+  model: "Realistic_Vision_V5.1"
+  steps: 20
+  sampler: "DPM++ 2M Karras"
+  cfg_scale: 7
+  width: 512
+  height: 768
+  batch_size: 1
+
+augmentation:
+  variations_per_image: 5
+  denoising_strength: 0.4
+  prompt_suffix: ""
