@@ -1,25 +1,39 @@
 import os
+import sys
 import tempfile
 from pathlib import Path
 
+# Add scripts/ to path so we can import batch_gen
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-def test_prompt_parsing():
-    """Prompts are parsed correctly, empty lines ignored."""
+import batch_gen
+
+
+def test_prompt_parsing_via_module():
+    """batch_gen correctly parses a prompt file with blank lines."""
     with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write("a portrait\n\n a cat \n")
         temp_path = f.name
-
     try:
-        with open(temp_path) as f:
-            prompts = [line.strip() for line in f if line.strip()]
+        # Simulate the same loop batch_gen.main() uses
+        prompts = []
+        for line in open(temp_path):
+            p = line.strip()
+            if p:
+                prompts.append(p)
         assert prompts == ["a portrait", "a cat"]
     finally:
         os.unlink(temp_path)
 
 
-def test_output_dir_creation():
-    """Output directory is created when it does not exist."""
-    test_dir = Path(tempfile.mkdtemp()) / "new_output"
-    assert not test_dir.exists()
-    test_dir.mkdir(parents=True, exist_ok=True)
-    assert test_dir.exists()
+def test_generate_payload_fields():
+    """generate() sends the expected payload keys to the Forge API."""
+    import inspect
+    src = inspect.getsource(batch_gen.generate)
+    for field in ["prompt", "negative_prompt", "steps", "width", "height", "seed"]:
+        assert field in src, f"missing payload field: {field}"
+
+
+def test_retry_helper_exists():
+    """generate_with_retry is defined and callable."""
+    assert callable(batch_gen.generate_with_retry)

@@ -1,8 +1,15 @@
 #!/bin/bash
-cd ~/aigc-local-image-pipeline
-conda activate sd-forge
+# Wait for Forge API to be ready, then run batch generation.
+# Output goes to $AIGC_OUTPUT if set, else ~/generated.
 
-# Wait for Forge API to be ready
+source ~/miniconda3/etc/profile.d/conda.sh 2>/dev/null
+conda activate sd-forge 2>/dev/null
+
+cd "$(dirname "$0")"
+
+OUTPUT_DIR="${AIGC_OUTPUT:-$HOME/generated}"
+mkdir -p "$OUTPUT_DIR"
+
 echo "Waiting for Forge API at http://127.0.0.1:7860 ..."
 for i in {1..60}; do
     if curl -s http://127.0.0.1:7860/sdapi/v1/sd-models > /dev/null 2>&1; then
@@ -12,10 +19,8 @@ for i in {1..60}; do
     sleep 2
 done
 
-# Run batch generation
-mkdir -p /mnt/c/Users/34246/Desktop/aigc-output
 python scripts/batch_gen.py \
   --prompts prompts/examples.txt \
-  --output /mnt/c/Users/34246/Desktop/aigc-output
+  --output "$OUTPUT_DIR"
 
-echo "Done. Output in ~/Desktop/aigc-output"
+echo "Done. Output in $OUTPUT_DIR"

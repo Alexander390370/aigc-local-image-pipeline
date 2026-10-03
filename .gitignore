@@ -1,0 +1,15 @@
+# Local config with credentials
+config/config.yaml
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Generated output
+generated/
+output/
+
+# IDE
+.vscode/
+.idea/
