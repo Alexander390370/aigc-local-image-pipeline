@@ -2,7 +2,6 @@
 """Batch generate images via Forge's txt2img API."""
 import argparse
 import base64
-import sys
 import time
 from pathlib import Path
 import requests
@@ -28,6 +27,20 @@ def generate(base_url, prompt, negative, steps, width, height, seed, save_to):
         print(f"saved {out}")
 
 
+def generate_with_retry(base_url, prompt, negative, steps, width, height,
+                        seed, save_to, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            return generate(base_url, prompt, negative, steps, width, height,
+                            seed, save_to)
+        except requests.exceptions.RequestException as e:
+            if attempt == max_retries - 1:
+                raise
+            wait = 2 ** attempt
+            print(f"Retry {attempt + 1}/{max_retries} in {wait}s: {e}")
+            time.sleep(wait)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--prompts", required=True)
@@ -45,9 +58,9 @@ def main():
         if not prompt:
             continue
         print(f"generating: {prompt}")
-        generate(args.base_url, prompt, args.negative,
-                 args.steps, args.width, args.height,
-                 args.seed, args.output)
+        generate_with_retry(args.base_url, prompt, args.negative,
+                            args.steps, args.width, args.height,
+                            args.seed, args.output)
 
 
 if __name__ == "__main__":
