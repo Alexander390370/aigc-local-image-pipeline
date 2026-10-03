@@ -1,3 +1,5 @@
+# AIGC Local Image Pipeline
+
 ![Tests](https://github.com/Alexander390370/aigc-local-image-pipeline/actions/workflows/test.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Platform: WSL2](https://img.shields.io/badge/Platform-WSL2-blue)
