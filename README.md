@@ -2,6 +2,7 @@
 
 A fully local AIGC image generation system built on top of Stable Diffusion WebUI Forge. Provides batch generation from prompt lists, a reusable API client, and Windows one-click launchers.
 
+![Tests](https://github.com/Alexander390370/aigc-local-image-pipeline/actions/workflows/test.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Platform: WSL2](https://img.shields.io/badge/Platform-WSL2-blue)
 ![Python 3.10](https://img.shields.io/badge/Python-3.10-blue)
@@ -89,6 +90,9 @@ aigc-local-image-pipeline/
 │   ├── batch_gen.py          # Batch generation from a prompt list
 │   ├── api_client.py         # Reusable Python client for Forge API
 │   └── model_downloader.sh   # Download community models from hf-mirror
+├── tests/
+│   ├── __init__.py
+│   └── test_batch_gen.py     # Unit tests (run via pytest)
 ├── prompts/
 │   └── examples.txt          # Example prompt list (one per line)
 └── config/
@@ -145,6 +149,14 @@ python scripts/batch_gen.py \
 On Windows + WSL2, `/mnt/c/Users/<YourName>/Desktop/...` maps directly to the Windows desktop.
 
 > 💡 **WSL filesystem note**: writing to `/mnt/c/...` is convenient but slower than the native WSL filesystem. For high-throughput batches, write to `~/generated/` first and copy files to Windows afterward.
+
+### 4. Run tests
+
+```bash
+pytest
+```
+
+Expected: `2 passed`. The same test suite runs automatically on every push via GitHub Actions.
 
 ## Windows One-Click Launchers (Optional)
 
