@@ -162,7 +162,7 @@ On Windows + WSL2, `/mnt/c/Users/<YourName>/Desktop/...` maps directly to the Wi
 pytest
 ```
 
-Expected: `3 passed`. The same test suite runs automatically on every push via GitHub Actions.
+Expected: `6 passed`. The same test suite runs automatically on every push via GitHub Actions.
 
 ## Windows One-Click Launchers (Optional)
 
